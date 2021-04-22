@@ -1,12 +1,12 @@
 ---
-title: "W21 PSTAT 131/231 Final project "
+title: 'W21 PSTAT 131/231 Final project '
 author: "PSTAT131-231"
 output: pdf_document
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F, 
                       eval=T,
-                      cache = T,
+                      cache = F,
                       results='markup', 
                       message=F,
                       warning=F, 
