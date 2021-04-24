@@ -1,7 +1,10 @@
 ---
 title: 'W21 PSTAT 131/231 Final project '
-author: "PSTAT131-231"
-output: pdf_document
+author: "W21 PSTAT131-231"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F, 
@@ -57,7 +60,7 @@ filter(election_raw, !is.na(county)) %>%
   pander()
 ```
 
-4. Inspect rows with `fips=2000`. Provide a reason for excluding them. Drop these observations -- please write over `election_raw` -- and report the data dimensions after removal. 
+4. Inspect rows with `fips=2000`. 
 
 ```{r}
 election_raw %>% 
@@ -115,7 +118,7 @@ election <- election_raw %>%
   filter(!is.na(fips))   # county-level tallies , 18011 observations
 ```
 
-6. How many named presidential candidates were there in the 2016 election? Draw a bar graph of all votes received by each candidate, and order the candidate names by decreasing vote counts. (You may need to log-transform the vote axis.)
+6. Bar graph of all votes received by each candidate and order the candidate names by decreasing vote counts. (log-transform the vote axis.)
 
 ```{r fig.height=6, fig.width=6}
 cat("There were", unique(election_raw$candidate) %>% length(), 
@@ -130,7 +133,7 @@ election_federal %>%
   theme(axis.text.x = element_text(angle = 90, hjust=1, vjust=0.3)) 
 ```
 
-7. Create variables `county_winner` and `state_winner` by taking the candidate with the highest proportion of votes. (Hint: to create `county_winner`, start with `election`, group by `fips`, compute `total` votes, and `pct = votes/total`. Then choose the highest row using `slice_max` (variable `state_winner` is similar).)
+7. Create variables `county_winner` and `state_winner` by taking the candidate with the highest proportion of votes.
 
 ```{r}
 county_winner <- election %>%
@@ -152,7 +155,7 @@ state_winner %>% head() %>% pander(caption = "state_winner")
 
 # Visualization
 
-Here you'll generate maps of the election data using `ggmap`. The .Rmd file for this document contains codes to generate the following map.
+Generate maps of the election data using `ggmap`. 
 ```{r}
 states <- map_data("state")
 
@@ -184,9 +187,9 @@ ggplot(county) +
 
 In order to map the winning candidate for each state, the map data (`states`) must be merged with with the election data (`state_winner`).
 
-The function `left_join()` will do the trick, but needs to join the data frames on a variable with values that match. In this case, that variable is the state name, but abbreviations are used in one data frame and the full name is used in the other.
 
-9. Use the following function to create a `fips` variable in the `states` data frame with values that match the `fips` variable in `election_federal`.
+
+9. Create a `fips` variable in the `states` data frame with values that match the `fips` variable in `election_federal`.
 ```{r}
 name2abb <- function(statename){
   ix <- match(statename, tolower(state.name))
@@ -201,7 +204,7 @@ states %>% head() %>% pander(caption = "states$fips")
 
 Now the data frames can be merged. `left_join(df1, df2)` takes all the rows from `df1` and looks for matches in `df2`. For each match, `left_join()` appends the data from the second table to the matching row in the first; if no matching value is found, it adds missing values.
 
-10. Use `left_join` to merge the tables and use the result to create a map of the election results by state. Your figure will look similar to this state level [New York Times map](https://www.nytimes.com/elections/results/president). (Hint: use `scale_fill_brewer(palette="Set1")` for a red-and-blue map.)
+10. Use `left_join` to merge the tables and use the result to create a map of the election results by state. 
 
 ```{r}
 results_state <- left_join(states, state_winner)
@@ -218,7 +221,7 @@ ggplot(results_state) +
   theme_nothing() # no axes
 ```
 
-11. Now create a county-level map. The county-level map data does not have a `fips` value, so to create one, use information from `maps::county.fips`: split the `polyname` column to `region` and `subregion` using `tidyr::separate`, and use `left_join()` to combine `county.fips` with the county-level map data. Then construct the map. Your figure will look similar to county-level [New York Times map](https://www.nytimes.com/elections/results/president).
+11. Now create a county-level map. The county-level map data does not have a `fips` value, so to create one, use information from `maps::county.fips`: split the `polyname` column to `region` and `subregion` using `tidyr::separate`, and use `left_join()` to combine `county.fips` with the county-level map data. Then construct the map. 
 
 ```{r}
 county.fips <- maps::county.fips %>% 
@@ -238,7 +241,8 @@ ggplot(results_county) +
   theme_nothing() # no axes
 ```
 
-12. Create a visualization of your choice using `census` data. Many exit polls noted that [demographics played a big role in the election](https://fivethirtyeight.com/features/demographics-not-hacking-explain-the-election-results/). If you need a starting point, use [this Washington Post article](https://www.washingtonpost.com/graphics/politics/2016-election/exit-polls/) and [this R graph gallery](https://www.r-graph-gallery.com/) for ideas and inspiration.
+12. Explore a few demographic variables in the census data
+
 ```{r fig.width=6}
 minority_income <- census %>% 
   na.omit() %>% 
@@ -280,7 +284,6 @@ ggplot(demographic, aes(x = Income, y = Minority)) +
     
 * Aggregate census data to county level, `census_ct`: group the sub-county data `census_subct` by state and county and compute popluation-weighted averages of each variable by taking the sum (since the variables were already transformed by the population weights)
     
-* Print the first few rows and columns of `census_ct`. 
 ```{r}
 # Clean census data
 census_del <- census %>% 
@@ -307,7 +310,7 @@ census_ct %>% head() %>% select(1:8) %>%
   pander(caption = "the first few rows and columns of `census_ct`") # Print the first few 
 ```
 
-14. If you were physically located in the United States on election day for the 2016 presidential election, what state and county were you in? Compare and contrast the results and demographic information for this county with the state it is located in. If you were not in the United States on election day, select any county. Do you find anything unusual or surprising? If so, explain; if not, explain why not.
+14. Compare and contrast the results and demographic information for the Santa Clara county (where I was physically located during the 2016 presidential eleciton) with the state it is located in. 
 ```{r}
 county_winner %>% filter (county == "Santa Clara County") %>% 
   pander(caption = "Voting results in Santa Clara County")
@@ -318,7 +321,7 @@ On election day for the 2016 presidential election, one of us was physically loc
 
 # Exploratory analysis
 
-15. Carry out PCA for both county & sub-county level census data. Compute the first two principal components PC1 and PC2 for both county and sub-county respectively. Discuss whether you chose to center and scale the features and the reasons for your choice. Examine and interpret the loadings.
+15. Carry out PCA for both county & sub-county level census data. Compute the first two principal components PC1 and PC2 for both county and sub-county respectively. 
 ```{r}
 # for county
 # extract features and center and scale (30-2,-1-1)
@@ -461,7 +464,7 @@ tibble(PC = 1:min(dim(x_mxs)),
 ```
 The minimum number of PCs needed to capture 90% of the variance for the sub-county analysis is **7**. \
 
-17. With `census_ct`, perform hierarchical clustering with complete linkage.  Cut the tree to partition the observations into 10 clusters. Re-run the hierarchical clustering algorithm using the first 5 principal components the county-level data as inputs instead of the original features. Compare and contrast the results. For both approaches investigate the cluster that contains San Mateo County. Which approach seemed to put San Mateo County in a more appropriate cluster? Comment on what you observe and discuss possible explanations for these observations.
+17. With `census_ct`, perform hierarchical clustering with complete linkage.  Cut the tree to partition the observations into 10 clusters. Re-run the hierarchical clustering algorithm using the first 5 principal components the county-level data as inputs instead of the original features. Compare and contrast the results. For both approaches investigate the cluster that contains San Mateo County.
 ```{r}
 set.seed(12521)
 # center and scale data
@@ -621,7 +624,7 @@ Further, we calculated the euclidean distance between the mean of the cluster th
 \newpage
 # Classification
 
-In order to train classification models, we need to combine `county_winner` and `census_ct` data. This seemingly straightforward task is harder than it sounds. Codes are provided in the .Rmd file that make the necessary changes to merge them into `election_cl` for classification.
+In order to train classification models, we need to combine `county_winner` and `census_ct` data. 
 ```{r}
 abb2name <- function(stateabb){
   ix <- match(stateabb, state.abb)
@@ -659,7 +662,7 @@ election_county <- election_county %>%
 ```
 After merging the data, partition the result into 80% training and 20% testing partitions.
 
-18. Decision tree: train a decision tree on the training partition, and apply cost-complexity pruning. Visualize the tree before and after pruning. Estimate the misclassification errors on the test partition, and intepret and discuss the results of the decision tree analysis. Use your plot to tell a story about voting behavior in the US (see this [NYT infographic](https://archive.nytimes.com/www.nytimes.com/imagepages/2008/04/16/us/20080416_OBAMA_GRAPHIC.html)).
+18. Decision tree: train a decision tree on the training partition, and apply cost-complexity pruning. Visualize the tree before and after pruning. Estimate the misclassification errors on the test partition, and intepret and discuss the results of the decision tree analysis. Use your plot to tell a story about voting behavior in the US .
 ```{r, fig.height = 8, fig.width = 12}
 election_county$candidate <- factor(election_county$candidate)
 
@@ -718,7 +721,7 @@ cat("the misclassification error rate is ", mean(candidate.pred.test != test$can
 ```
 The decision tree after pruning returns a misclassification rate of 0.0995 with 14 terminal nodes, split primarily on variables White, Men, and TotalPop. We see from our pruned tree that the first variable the data is split on is White, implying that counties with lower white populations are more likely to vote for Clinton. The next variable the tree splits on is Transit, where counties that utilize public transit tend towards Trump, so we suspect that this may correlate with county demographics and wealth distribution. Thus, we see that counties with higher transit rates and total populations, which are likelier to be lower income counties, usually vote for Clinton. Conversely, counties with lower, white populations are more likely to vote for Trump.
 
-19. Train a logistic regression model on the training partition to predict the winning candidate in each county and estimate errors on the test partition. What are the significant variables? Are these consistent with what you observed in the decision tree analysis? Interpret the meaning of one or two significant coefficients of your choice in terms of a unit change in the variables. Did the results in your particular county (from question 14) match the predicted results?  
+19. Train a logistic regression model on the training partition to predict the winning candidate in each county and estimate errors on the test partition. 
 ```{r}
 # fit logistic regression linear in x1 and x2
 fit_glm <- glm(candidate ~ ., family = 'binomial', data = train)
@@ -753,7 +756,7 @@ Holding all other variables constant, a one percent increase in Employed(16+) in
 The results in our particular county (from question 14) **did** match the predicted results, as Clinton was predicted to win in Santa Clara County and she did, in fact, win in the election.
 
 
-20.  Compute ROC curves for the decision tree and logistic regression using predictions on the test data, and display them on the same plot. Based on your classification results, discuss the pros and cons of each method. Are the different classifiers more appropriate for answering different kinds of questions about the election?
+20.  Compute ROC curves for the decision tree and logistic regression using predictions on the test data, and display them on the same plot.
 ```{r fig.height=3, fig.width=5}
 # DECISION TREE first
 # compute predictions
